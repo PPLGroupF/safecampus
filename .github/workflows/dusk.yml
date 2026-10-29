@@ -34,10 +34,11 @@ jobs:
 
       - name: Prepare environment
         run: |
-          cp .env.example .env
+          # Server (php artisan serve) dan Dusk harus memakai konfigurasi yang sama (SQLite dusk.sqlite).
+          # Server dijalankan dengan --no-reload, jadi tidak ikut membaca .env yang ditukar oleh Dusk.
+          cp .env.dusk.example .env
           php artisan key:generate
-          cp .env.dusk.example .env.dusk.local
-          sed -i "s|^APP_KEY=.*|$(grep ^APP_KEY= .env)|" .env.dusk.local
+          cp .env .env.dusk.local
           touch database/dusk.sqlite
 
       - name: Install ChromeDriver
