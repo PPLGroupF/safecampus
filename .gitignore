@@ -19,3 +19,9 @@ yarn-error.log
 /.idea
 /.vscode
 database/database.sqlite
+/database/dusk.sqlite
+.env.dusk.local
+/tests/Browser/screenshots/*
+/tests/Browser/console/*
+/tests/Browser/source/*
+!/tests/Browser/**/.gitignore
