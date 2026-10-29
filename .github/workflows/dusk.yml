@@ -42,7 +42,20 @@ jobs:
           touch database/dusk.sqlite
 
       - name: Install ChromeDriver
-        run: php artisan dusk:chrome-driver --detect
+        run: |
+          php artisan dusk:chrome-driver --detect
+          # Dusk 8.0 kadang salah mengganti nama file hasil unduhan ChromeDriver (zip versi baru berisi file lisensi).
+          # Pastikan vendor/laravel/dusk/bin/chromedriver-linux benar-benar ada dan bisa dijalankan.
+          BIN=vendor/laravel/dusk/bin
+          if [ ! -x "$BIN/chromedriver-linux" ]; then
+            if [ -f "$BIN/chromedriver-linux64/chromedriver" ]; then
+              cp "$BIN/chromedriver-linux64/chromedriver" "$BIN/chromedriver-linux"
+            else
+              cp "$CHROMEWEBDRIVER/chromedriver" "$BIN/chromedriver-linux"
+            fi
+            chmod +x "$BIN/chromedriver-linux"
+          fi
+          "$BIN/chromedriver-linux" --version
 
       - name: Start server
         run: php artisan serve --no-reload --port=8000 > /dev/null 2>&1 &
