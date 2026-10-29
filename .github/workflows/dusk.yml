@@ -1,0 +1,74 @@
+name: Laravel Dusk
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite, fileinfo, zip
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare environment
+        run: |
+          # Server (php artisan serve) dan Dusk harus memakai konfigurasi yang sama (SQLite dusk.sqlite).
+          # Server dijalankan dengan --no-reload, jadi tidak ikut membaca .env yang ditukar oleh Dusk.
+          cp .env.dusk.example .env
+          php artisan key:generate
+          cp .env .env.dusk.local
+          touch database/dusk.sqlite
+
+      - name: Install ChromeDriver
+        run: |
+          php artisan dusk:chrome-driver --detect
+          # Dusk 8.0 kadang salah mengganti nama file hasil unduhan ChromeDriver (zip versi baru berisi file lisensi).
+          # Pastikan vendor/laravel/dusk/bin/chromedriver-linux benar-benar ada dan bisa dijalankan.
+          BIN=vendor/laravel/dusk/bin
+          if [ ! -x "$BIN/chromedriver-linux" ]; then
+            if [ -f "$BIN/chromedriver-linux64/chromedriver" ]; then
+              cp "$BIN/chromedriver-linux64/chromedriver" "$BIN/chromedriver-linux"
+            else
+              cp "$CHROMEWEBDRIVER/chromedriver" "$BIN/chromedriver-linux"
+            fi
+            chmod +x "$BIN/chromedriver-linux"
+          fi
+          "$BIN/chromedriver-linux" --version
+
+      - name: Start server
+        run: php artisan serve --no-reload --port=8000 > /dev/null 2>&1 &
+
+      - name: Run Feature tests
+        run: php artisan test --testsuite=Feature
+
+      - name: Run Dusk tests
+        run: php artisan dusk
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dusk-screenshots
+          path: tests/Browser/screenshots
