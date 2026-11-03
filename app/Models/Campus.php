@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Campus extends Model
 {
@@ -22,6 +23,11 @@ class Campus extends Model
         ];
     }
 
+    public function units(): HasMany
+    {
+        return $this->hasMany(Unit::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
@@ -29,14 +35,9 @@ class Campus extends Model
 
     /**
      * Kampus yang masih memiliki unit/fakultas aktif tidak boleh dinonaktifkan.
-     * Relasi units() ditambahkan bersama tabel units (PBI-01).
      */
     public function hasActiveUnits(): bool
     {
-        if (! method_exists($this, 'units')) {
-            return false;
-        }
-
         return $this->units()->where('is_active', true)->exists();
     }
 }
