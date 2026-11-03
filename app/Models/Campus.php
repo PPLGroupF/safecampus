@@ -26,4 +26,17 @@ class Campus extends Model
     {
         return $query->where('is_active', true);
     }
+
+    /**
+     * Kampus yang masih memiliki unit/fakultas aktif tidak boleh dinonaktifkan.
+     * Relasi units() ditambahkan bersama tabel units (PBI-01).
+     */
+    public function hasActiveUnits(): bool
+    {
+        if (! method_exists($this, 'units')) {
+            return false;
+        }
+
+        return $this->units()->where('is_active', true)->exists();
+    }
 }
