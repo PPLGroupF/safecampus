@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 // PBI-02: Kelola kategori kekerasan (admin)
-Route::middleware(['auth'])
+Route::middleware(['auth', 'role:admin'])
     ->prefix('admin/kategori')
     ->name('admin.categories.')
     ->group(function () {
