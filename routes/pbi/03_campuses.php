@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\CampusController;
 use Illuminate\Support\Facades\Route;
 
 // PBI-03: Kelola data kampus (admin)
-Route::middleware(['auth'])
+Route::middleware(['auth', 'role:admin'])
     ->prefix('admin/kampus')
     ->name('admin.campuses.')
     ->group(function () {

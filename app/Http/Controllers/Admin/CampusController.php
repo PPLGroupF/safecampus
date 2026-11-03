@@ -52,6 +52,11 @@ class CampusController extends Controller
      */
     public function toggle(Campus $campus): RedirectResponse
     {
+        if ($campus->is_active && $campus->hasActiveUnits()) {
+            return redirect()->route('admin.campuses.index')
+                ->with('error', 'Kampus tidak dapat dinonaktifkan karena masih memiliki unit/fakultas aktif.');
+        }
+
         $campus->update(['is_active' => ! $campus->is_active]);
 
         $message = $campus->is_active ? 'Kampus diaktifkan kembali.' : 'Kampus dinonaktifkan.';
