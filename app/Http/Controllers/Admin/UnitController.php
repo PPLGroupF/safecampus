@@ -63,6 +63,16 @@ class UnitController extends Controller
      */
     public function toggle(Unit $unit): RedirectResponse
     {
+        if ($unit->is_active && $unit->hasActiveUsers()) {
+            return redirect()->route('admin.units.index')
+                ->with('error', 'Unit/fakultas tidak dapat dinonaktifkan karena masih memiliki akun pengguna aktif.');
+        }
+
+        if (! $unit->is_active && ! $unit->campus->is_active) {
+            return redirect()->route('admin.units.index')
+                ->with('error', 'Aktifkan kampus '.$unit->campus->nama_kampus.' terlebih dahulu.');
+        }
+
         $unit->update(['is_active' => ! $unit->is_active]);
 
         $message = $unit->is_active ? 'Unit/fakultas diaktifkan kembali.' : 'Unit/fakultas dinonaktifkan.';
