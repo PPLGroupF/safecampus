@@ -35,6 +35,19 @@ class Unit extends Model
     }
 
     /**
+     * Unit yang masih dipakai akun pengguna aktif tidak boleh dinonaktifkan.
+     * Relasi users() ditambahkan bersama kolom users.unit_id (PBI-04).
+     */
+    public function hasActiveUsers(): bool
+    {
+        if (! method_exists($this, 'users')) {
+            return false;
+        }
+
+        return $this->users()->where('is_active', true)->exists();
+    }
+
+    /**
      * Label lengkap untuk pilihan formulir, contoh: "Fakultas Rekayasa Industri (Telkom University Bandung)".
      */
     public function labelLengkap(): string

@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\UnitController;
 use Illuminate\Support\Facades\Route;
 
 // PBI-01: Kelola data unit/fakultas (admin)
-Route::middleware(['auth'])
+Route::middleware(['auth', 'role:admin'])
     ->prefix('admin/unit')
     ->name('admin.units.')
     ->group(function () {
