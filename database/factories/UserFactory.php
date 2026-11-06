@@ -29,18 +29,20 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'role' => 'mahasiswa',
+            'nim' => fake()->unique()->numerify('1020424#####'),
+            'is_active' => true,
             'remember_token' => Str::random(10),
         ];
     }
 
     public function admin(): static
     {
-        return $this->state(fn () => ['role' => 'admin']);
+        return $this->state(fn () => ['role' => 'admin', 'nim' => null]);
     }
 
     public function petugas(): static
     {
-        return $this->state(fn () => ['role' => 'petugas']);
+        return $this->state(fn () => ['role' => 'petugas', 'nim' => null]);
     }
 
     /**
