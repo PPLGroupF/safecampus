@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogger;
 use App\Models\Campus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,8 @@ class CampusController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Campus::create($this->validated($request));
+        $campus = Campus::create($this->validated($request));
+        AuditLogger::record('Menambah kampus '.$campus->nama_kampus, 'kampus');
 
         return redirect()->route('admin.campuses.index')->with('success', 'Kampus berhasil ditambahkan.');
     }
@@ -43,6 +45,7 @@ class CampusController extends Controller
     public function update(Request $request, Campus $campus): RedirectResponse
     {
         $campus->update($this->validated($request, $campus));
+        AuditLogger::record('Mengubah kampus '.$campus->nama_kampus, 'kampus');
 
         return redirect()->route('admin.campuses.index')->with('success', 'Kampus berhasil diperbarui.');
     }
@@ -58,6 +61,7 @@ class CampusController extends Controller
         }
 
         $campus->update(['is_active' => ! $campus->is_active]);
+        AuditLogger::record(($campus->is_active ? 'Mengaktifkan' : 'Menonaktifkan').' kampus '.$campus->nama_kampus, 'kampus');
 
         $message = $campus->is_active ? 'Kampus diaktifkan kembali.' : 'Kampus dinonaktifkan.';
 

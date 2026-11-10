@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogger;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,8 @@ class CategoryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Category::create($this->validated($request));
+        $category = Category::create($this->validated($request));
+        AuditLogger::record('Menambah kategori '.$category->nama_kategori, 'kategori');
 
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil ditambahkan.');
     }
@@ -43,6 +45,7 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category): RedirectResponse
     {
         $category->update($this->validated($request, $category));
+        AuditLogger::record('Mengubah kategori '.$category->nama_kategori, 'kategori');
 
         return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diperbarui.');
     }
@@ -53,6 +56,7 @@ class CategoryController extends Controller
     public function toggle(Category $category): RedirectResponse
     {
         $category->update(['is_active' => ! $category->is_active]);
+        AuditLogger::record(($category->is_active ? 'Mengaktifkan' : 'Menonaktifkan').' kategori '.$category->nama_kategori, 'kategori');
 
         $message = $category->is_active ? 'Kategori diaktifkan kembali.' : 'Kategori dinonaktifkan.';
 
