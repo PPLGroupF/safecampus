@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogger;
 use App\Models\Campus;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
@@ -38,7 +39,8 @@ class UnitController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Unit::create($this->validated($request));
+        $unit = Unit::create($this->validated($request));
+        AuditLogger::record('Menambah unit/fakultas '.$unit->nama_unit, 'unit');
 
         return redirect()->route('admin.units.index')->with('success', 'Unit/fakultas berhasil ditambahkan.');
     }
@@ -54,6 +56,7 @@ class UnitController extends Controller
     public function update(Request $request, Unit $unit): RedirectResponse
     {
         $unit->update($this->validated($request, $unit));
+        AuditLogger::record('Mengubah unit/fakultas '.$unit->nama_unit, 'unit');
 
         return redirect()->route('admin.units.index')->with('success', 'Unit/fakultas berhasil diperbarui.');
     }
@@ -74,6 +77,7 @@ class UnitController extends Controller
         }
 
         $unit->update(['is_active' => ! $unit->is_active]);
+        AuditLogger::record(($unit->is_active ? 'Mengaktifkan' : 'Menonaktifkan').' unit/fakultas '.$unit->nama_unit, 'unit');
 
         $message = $unit->is_active ? 'Unit/fakultas diaktifkan kembali.' : 'Unit/fakultas dinonaktifkan.';
 
