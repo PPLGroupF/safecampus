@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -53,7 +55,12 @@ class UserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        User::create($this->validated($request) + ['is_active' => true]);
+        $data = $this->validated($request);
+        // Kata sandi awal disimpan dalam bentuk hash, tidak pernah dalam teks asli.
+        $data['password'] = Hash::make($data['password']);
+
+        $user = User::create($data + ['is_active' => true]);
+        AuditLogger::record('Menambah akun '.$user->email.' ('.$user->roleLabel().')', 'pengguna');
 
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil ditambahkan.');
     }
@@ -68,7 +75,15 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $user->update($this->validated($request, $user));
+        $data = $this->validated($request, $user);
+
+        // Admin tidak boleh menurunkan perannya sendiri agar tidak terkunci dari sistem.
+        if ($user->is($request->user()) && $data['role'] !== User::ROLE_ADMIN) {
+            return back()->withInput()->with('error', 'Anda tidak dapat mengubah peran akun Anda sendiri.');
+        }
+
+        $user->update($data);
+        AuditLogger::record('Mengubah akun '.$user->email, 'pengguna');
 
         return redirect()->route('admin.users.index')->with('success', 'Akun berhasil diperbarui.');
     }
@@ -76,9 +91,14 @@ class UserController extends Controller
     /**
      * Akun tidak dihapus permanen agar riwayat laporan dan audit tetap utuh.
      */
-    public function toggle(User $user): RedirectResponse
+    public function toggle(Request $request, User $user): RedirectResponse
     {
+        if ($user->is($request->user())) {
+            return redirect()->route('admin.users.index')->with('error', 'Anda tidak dapat menonaktifkan akun Anda sendiri.');
+        }
+
         $user->update(['is_active' => ! $user->is_active]);
+        AuditLogger::record(($user->is_active ? 'Mengaktifkan' : 'Menonaktifkan').' akun '.$user->email, 'pengguna');
 
         $message = $user->is_active ? 'Akun diaktifkan kembali.' : 'Akun dinonaktifkan.';
 
