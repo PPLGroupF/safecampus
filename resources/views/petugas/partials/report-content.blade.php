@@ -13,4 +13,10 @@
             <dd class="whitespace-pre-line text-gray-900">{{ $report->terlapor_keterangan ?: '-' }}</dd>
         </div>
     </dl>
+    @if ($report->terlapor_peran === 'petugas_satgas')
+        <div class="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800" dusk="conflict-warning">
+            <x-icon name="warning" class="mt-0.5 h-4 w-4 shrink-0" />
+            Terlapor adalah anggota Satgas. Pastikan laporan ditangani petugas yang tidak memiliki konflik kepentingan.
+        </div>
+    @endif
 </x-card>
