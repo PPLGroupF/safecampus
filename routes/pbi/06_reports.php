@@ -12,4 +12,7 @@ Route::middleware(['auth', 'role:mahasiswa'])
         Route::get('/buat', [ReportController::class, 'create'])->name('create');
         Route::post('/', [ReportController::class, 'store'])->name('store');
         Route::get('/{report}', [ReportController::class, 'show'])->name('show');
+        Route::get('/{report}/ubah', [ReportController::class, 'edit'])->name('edit');
+        Route::put('/{report}', [ReportController::class, 'update'])->name('update');
+        Route::patch('/{report}/batal', [ReportController::class, 'cancel'])->name('cancel');
     });

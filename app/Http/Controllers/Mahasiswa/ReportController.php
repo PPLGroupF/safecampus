@@ -77,6 +77,67 @@ class ReportController extends Controller
             ->with('success', 'Laporan berhasil dikirim. Kode tiket Anda: '.$report->kode_tiket);
     }
 
+    public function edit(Request $request, Report $report): View|RedirectResponse
+    {
+        $this->ensureOwner($request, $report);
+
+        if (! $report->isEditableByReporter()) {
+            return $this->lockedResponse($report);
+        }
+
+        return view('reports.edit', [
+            'report' => $report,
+            'categories' => Category::optionsForReport($report->category_id),
+        ]);
+    }
+
+    public function update(Request $request, Report $report): RedirectResponse
+    {
+        $this->ensureOwner($request, $report);
+
+        if (! $report->isEditableByReporter()) {
+            return $this->lockedResponse($report);
+        }
+
+        $report->update($this->validated($request, $report));
+
+        AuditLogger::record('Mengubah laporan', 'laporan', $report->kode_tiket, anonymous: $report->isAnonymous());
+
+        return redirect()->route('laporan.show', $report)->with('success', 'Laporan berhasil diperbarui.');
+    }
+
+    /**
+     * Laporan tidak dihapus dari basis data, hanya diberi status Dibatalkan.
+     */
+    public function cancel(Request $request, Report $report): RedirectResponse
+    {
+        $this->ensureOwner($request, $report);
+
+        if (! $report->isEditableByReporter()) {
+            return $this->lockedResponse($report);
+        }
+
+        DB::transaction(function () use ($report) {
+            $report->update(['status' => Report::STATUS_DIBATALKAN]);
+            $report->statuses()->create([
+                // Pembatalan oleh pelapor anonim dicatat tanpa identitas.
+                'diubah_oleh' => $report->isAnonymous() ? null : $report->user_id,
+                'status_baru' => Report::STATUS_DIBATALKAN,
+                'catatan' => 'Laporan dibatalkan oleh pelapor.',
+            ]);
+        });
+
+        AuditLogger::record('Membatalkan laporan', 'laporan', $report->kode_tiket, anonymous: $report->isAnonymous());
+
+        return redirect()->route('laporan.show', $report)->with('success', 'Laporan telah dibatalkan.');
+    }
+
+    private function lockedResponse(Report $report): RedirectResponse
+    {
+        return redirect()->route('laporan.show', $report)
+            ->with('error', 'Laporan sudah diproses petugas sehingga tidak dapat diubah atau dibatalkan.');
+    }
+
     /**
      * Pelapor hanya boleh membuka laporannya sendiri. Laporan milik orang lain
      * dianggap tidak ada (404) agar keberadaannya tidak terungkap.

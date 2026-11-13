@@ -129,40 +129,4 @@ class Report extends Model
     {
         return $this->mode_identitas === self::MODE_ANONIM;
     }
-
-    /**
-     * Identitas pelapor sesuai siapa yang melihat (penyamaran identitas).
-     *
-     * - Pelapor sendiri selalu melihat identitasnya.
-     * - Petugas melihat identitas hanya jika mode Teridentifikasi.
-     * - Admin dan pihak lain tidak pernah melihat identitas pelapor.
-     *
-     * @return array{anonim: bool, nama: string, nim: ?string, email: ?string, unit: ?string}
-     */
-    public function pelaporUntuk(?User $viewer): array
-    {
-        $isOwner = $viewer && $viewer->id === $this->user_id;
-        $canSeeIdentity = $isOwner || ($viewer?->isPetugas() && ! $this->isAnonymous());
-
-        if (! $canSeeIdentity) {
-            return [
-                'anonim' => true,
-                'nama' => $this->isAnonymous() ? 'Pelapor Anonim' : 'Pelapor',
-                'nim' => null,
-                'email' => null,
-                // Unit tetap ditampilkan karena tidak menunjuk ke individu tertentu.
-                'unit' => $this->unit?->nama_unit,
-            ];
-        }
-
-        $pelapor = $this->pelapor;
-
-        return [
-            'anonim' => false,
-            'nama' => $pelapor->nama,
-            'nim' => $pelapor->nim,
-            'email' => $pelapor->email,
-            'unit' => $this->unit?->nama_unit,
-        ];
-    }
 }
