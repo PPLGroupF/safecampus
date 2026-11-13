@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -49,6 +50,12 @@ class User extends Authenticatable
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    /** Laporan yang dibuat pengguna ini sebagai pelapor. */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
     }
 
     public function scopeActive(Builder $query): Builder

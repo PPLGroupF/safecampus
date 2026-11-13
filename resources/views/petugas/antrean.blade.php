@@ -43,16 +43,25 @@
                             <th>Kode Tiket</th>
                             <th>Tanggal Masuk</th>
                             <th>Kategori</th>
+                            <th>Pelapor</th>
                             <th>Status</th>
                             <th class="text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @foreach ($reports as $report)
+                            @php($pelapor = $report->pelaporUntuk(auth()->user()))
                             <tr dusk="queue-row-{{ $report->id }}">
                                 <td class="font-mono text-xs font-semibold text-gray-900">{{ $report->kode_tiket }}</td>
                                 <td class="whitespace-nowrap text-gray-500">{{ $report->created_at->translatedFormat('d M Y, H:i') }}</td>
                                 <td>{{ $report->category->nama_kategori }}</td>
+                                <td>
+                                    @if ($pelapor['anonim'])
+                                        <span class="inline-flex items-center gap-1 text-gray-500"><x-icon name="lock" class="h-4 w-4" /> {{ $pelapor['nama'] }}</span>
+                                    @else
+                                        {{ $pelapor['nama'] }}
+                                    @endif
+                                </td>
                                 <td><x-badge :color="$report->statusColor()">{{ $report->statusLabel() }}</x-badge></td>
                                 <td class="text-right">
                                     <x-btn variant="secondary" size="sm" :href="route('petugas.laporan.show', $report)" dusk="open-{{ $report->id }}">Lihat Detail</x-btn>

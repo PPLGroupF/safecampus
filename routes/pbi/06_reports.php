@@ -8,6 +8,8 @@ Route::middleware(['auth', 'role:mahasiswa'])
     ->prefix('laporan')
     ->name('laporan.')
     ->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/buat', [ReportController::class, 'create'])->name('create');
         Route::post('/', [ReportController::class, 'store'])->name('store');
+        Route::get('/{report}', [ReportController::class, 'show'])->name('show');
     });

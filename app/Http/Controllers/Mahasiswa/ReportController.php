@@ -15,6 +15,32 @@ use Illuminate\View\View;
 
 class ReportController extends Controller
 {
+    public function index(Request $request): View
+    {
+        $reports = $request->user()->reports()
+            ->with('category')
+            ->when($request->filled('q'), fn ($query) => $query->where('kode_tiket', 'like', '%'.$request->q.'%'))
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
+            ->when($request->filled('category_id'), fn ($query) => $query->where('category_id', $request->category_id))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('reports.index', [
+            'reports' => $reports,
+            'categories' => Category::orderBy('nama_kategori')->get(),
+        ]);
+    }
+
+    public function show(Request $request, Report $report): View
+    {
+        $this->ensureOwner($request, $report);
+
+        $report->load(['category', 'unit', 'statuses']);
+
+        return view('reports.show', compact('report'));
+    }
+
     public function create(): View
     {
         return view('reports.create', [
@@ -30,6 +56,8 @@ class ReportController extends Controller
         $report = DB::transaction(function () use ($data, $request) {
             $report = Report::create($data + [
                 'user_id' => $request->user()->id,
+                // Unit asal pelapor terisi otomatis dari profil, bukan dari input formulir.
+                'unit_id' => $request->user()->unit_id,
                 'kode_tiket' => TicketCode::generate(),
                 'status' => Report::STATUS_DIAJUKAN,
             ]);
@@ -45,8 +73,17 @@ class ReportController extends Controller
 
         AuditLogger::record('Mengajukan laporan', 'laporan', $report->kode_tiket, anonymous: $report->isAnonymous());
 
-        return redirect()->route('laporan.create')
+        return redirect()->route('laporan.show', $report)
             ->with('success', 'Laporan berhasil dikirim. Kode tiket Anda: '.$report->kode_tiket);
+    }
+
+    /**
+     * Pelapor hanya boleh membuka laporannya sendiri. Laporan milik orang lain
+     * dianggap tidak ada (404) agar keberadaannya tidak terungkap.
+     */
+    private function ensureOwner(Request $request, Report $report): void
+    {
+        abort_unless($report->user_id === $request->user()->id, 404);
     }
 
     private function validated(Request $request, ?Report $report = null): array
