@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 // PBI-04: Kelola akun pengguna (admin)
-Route::middleware(['auth'])
+Route::middleware(['auth', 'role:admin'])
     ->prefix('admin/pengguna')
     ->name('admin.users.')
     ->group(function () {
