@@ -28,7 +28,7 @@ class VerificationController extends Controller
             ->pluck('jumlah', 'status');
 
         $reports = (clone $base)
-            ->with('category')
+            ->with(['category', 'unit', 'pelapor'])
             ->when(
                 $request->filled('status'),
                 fn ($query) => $query->where('status', $request->status),
@@ -50,7 +50,8 @@ class VerificationController extends Controller
 
     public function show(Request $request, Report $report): View
     {
-        $report->load(['category', 'unit.campus', 'statuses']);
+        // Kronologi dan keterangan terlapor didekripsi otomatis oleh cast "encrypted" pada model.
+        $report->load(['category', 'unit.campus', 'statuses', 'pelapor']);
 
         return view('petugas.show', compact('report'));
     }
