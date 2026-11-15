@@ -41,11 +41,17 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $isActive = fn ($user) => (bool) $user->is_active;
+
+        if (! Auth::attemptWhen($this->only('email', 'password'), $isActive, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            // Bedakan akun nonaktif dari kata sandi salah, hanya jika kata sandinya benar.
+            $user = Auth::getProvider()->retrieveByCredentials($this->only('email'));
+            $inactive = $user && ! $user->is_active && Auth::getProvider()->validateCredentials($user, $this->only('password'));
+
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => $inactive ? 'Akun Anda sedang dinonaktifkan. Hubungi admin SafeCampus.' : trans('auth.failed'),
             ]);
         }
 
