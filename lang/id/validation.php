@@ -64,7 +64,9 @@ return [
     'uploaded' => ':attribute gagal diunggah.',
     'url' => 'Format :attribute tidak valid.',
 
-    'custom' => [],
+    'custom' => [
+        'catatan' => ['required' => 'Catatan wajib diisi untuk keputusan atau status ini.'],
+    ],
 
     'attributes' => [
         'nama' => 'nama',
