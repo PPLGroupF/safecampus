@@ -71,7 +71,9 @@ class ReportController extends Controller
             return $report;
         });
 
-        AuditLogger::record('Mengajukan laporan', 'laporan', $report->kode_tiket, anonymous: $report->isAnonymous());
+        // Semua aksi pelapor dicatat tanpa identitas (apa pun mode identitasnya),
+        // agar admin tidak bisa menghubungkan akun mahasiswa dengan kode tiket laporan.
+        AuditLogger::record('Mengajukan laporan', 'laporan', $report->kode_tiket, anonymous: true);
 
         return redirect()->route('laporan.show', $report)
             ->with('success', 'Laporan berhasil dikirim. Kode tiket Anda: '.$report->kode_tiket);
@@ -101,7 +103,7 @@ class ReportController extends Controller
 
         $report->update($this->validated($request, $report));
 
-        AuditLogger::record('Mengubah laporan', 'laporan', $report->kode_tiket, anonymous: $report->isAnonymous());
+        AuditLogger::record('Mengubah laporan', 'laporan', $report->kode_tiket, anonymous: true);
 
         return redirect()->route('laporan.show', $report)->with('success', 'Laporan berhasil diperbarui.');
     }
@@ -127,7 +129,7 @@ class ReportController extends Controller
             ]);
         });
 
-        AuditLogger::record('Membatalkan laporan', 'laporan', $report->kode_tiket, anonymous: $report->isAnonymous());
+        AuditLogger::record('Membatalkan laporan', 'laporan', $report->kode_tiket, anonymous: true);
 
         return redirect()->route('laporan.show', $report)->with('success', 'Laporan telah dibatalkan.');
     }

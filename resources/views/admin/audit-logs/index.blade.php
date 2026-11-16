@@ -63,7 +63,7 @@
                                         <div class="font-medium text-gray-900">{{ $log->user->nama }}</div>
                                         <div class="text-xs text-gray-500">{{ $log->peran ? \App\Models\User::ROLES[$log->peran] : '' }}</div>
                                     @elseif ($log->peran === 'mahasiswa')
-                                        <div class="font-medium text-gray-900">Pelapor (anonim)</div>
+                                        <div class="font-medium text-gray-900">Pelapor (disamarkan)</div>
                                         <div class="text-xs text-gray-500">Mahasiswa</div>
                                     @else
                                         <span class="text-gray-400">Tidak dikenal</span>
