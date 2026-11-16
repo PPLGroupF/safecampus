@@ -14,6 +14,9 @@ use Throwable;
  *   AuditLogger::record('Menambah kampus Telkom University Bandung', 'kampus');
  *   AuditLogger::record('Mengajukan laporan', 'laporan', $report->kode_tiket, anonymous: true);
  *
+ * Aksi pelapor di modul laporan selalu memakai anonymous: true, baik mode Teridentifikasi
+ * maupun Anonim, supaya log tidak menghubungkan akun mahasiswa dengan kode tiket.
+ *
  * Jangan pernah mengirim isi kronologi, catatan, atau data pribadi ke dalam teks aksi.
  */
 class AuditLogger

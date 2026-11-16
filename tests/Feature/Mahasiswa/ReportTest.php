@@ -54,6 +54,19 @@ class ReportTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['aksi' => 'Mengajukan laporan', 'user_id' => null, 'peran' => 'mahasiswa']);
     }
 
+    public function test_identified_report_is_also_logged_without_user_id(): void
+    {
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(route('laporan.store'), $this->payload(['mode_identitas' => 'teridentifikasi']));
+        $report = Report::first();
+        $this->actingAs($student)->patch(route('laporan.cancel', $report));
+
+        $this->assertDatabaseMissing('audit_logs', ['modul' => 'laporan', 'user_id' => $student->id]);
+        $this->assertDatabaseHas('audit_logs', ['aksi' => 'Mengajukan laporan', 'user_id' => null, 'kode_tiket' => $report->kode_tiket]);
+        $this->assertDatabaseHas('audit_logs', ['aksi' => 'Membatalkan laporan', 'user_id' => null]);
+    }
+
     public function test_validation_and_inactive_category(): void
     {
         $student = User::factory()->create();
