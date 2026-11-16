@@ -50,10 +50,20 @@ class VerificationController extends Controller
 
     public function show(Request $request, Report $report): View
     {
+        $this->ensureVisible($request, $report);
+
         // Kronologi dan keterangan terlapor didekripsi otomatis oleh cast "encrypted" pada model.
         $report->load(['category', 'unit.campus', 'statuses', 'pelapor']);
 
         return view('petugas.show', compact('report'));
+    }
+
+    /**
+     * Petugas hanya boleh membuka laporan yang termasuk dalam antreannya.
+     */
+    private function ensureVisible(Request $request, Report $report): void
+    {
+        abort_unless($this->visibleReports($request)->whereKey($report->id)->exists(), 404);
     }
 
     /**
