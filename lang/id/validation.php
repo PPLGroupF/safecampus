@@ -64,7 +64,9 @@ return [
     'uploaded' => ':attribute gagal diunggah.',
     'url' => 'Format :attribute tidak valid.',
 
-    'custom' => [],
+    'custom' => [
+        'nim' => ['regex' => 'NIM hanya boleh berisi angka.'],
+    ],
 
     'attributes' => [
         'nama' => 'nama',
