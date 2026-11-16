@@ -21,5 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Sesi kedaluwarsa (error 419), misalnya setelah migrate:fresh atau tab dibiarkan terlalu lama.
+        // Pengguna diarahkan ke halaman login dengan pesan yang jelas, bukan halaman error.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
+
+            \Illuminate\Support\Facades\Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with('status', 'Sesi Anda telah berakhir. Silakan masuk kembali.');
+        });
     })->create();
