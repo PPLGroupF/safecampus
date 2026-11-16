@@ -152,7 +152,12 @@ class ReportController extends Controller
         return $request->validate([
             'category_id' => [
                 'required',
-                Rule::exists('categories', 'id'),
+                Rule::exists('categories', 'id')->where(fn ($query) => $query->where(function ($inner) use ($report) {
+                    $inner->where('is_active', true);
+                    if ($report) {
+                        $inner->orWhere('id', $report->category_id);
+                    }
+                })),
             ],
             'kronologi' => ['required', 'string', 'min:30', 'max:5000'],
             'terlapor_peran' => ['required', Rule::in(array_keys(Report::TERLAPOR_PERAN))],
