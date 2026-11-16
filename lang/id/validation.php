@@ -66,6 +66,7 @@ return [
 
     'custom' => [
         'nim' => ['regex' => 'NIM hanya boleh berisi angka.'],
+        'catatan' => ['required' => 'Catatan wajib diisi untuk keputusan atau status ini.'],
     ],
 
     'attributes' => [
