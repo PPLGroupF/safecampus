@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Report;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class VerificationController extends Controller
@@ -52,10 +55,73 @@ class VerificationController extends Controller
     {
         $this->ensureVisible($request, $report);
 
+        // Laporan baru otomatis masuk ke tahap Dalam Verifikasi saat pertama kali dibuka petugas (diubah oleh sistem).
+        if ($report->status === Report::STATUS_DIAJUKAN) {
+            $report->update(['status' => Report::STATUS_DALAM_VERIFIKASI]);
+        }
+
         // Kronologi dan keterangan terlapor didekripsi otomatis oleh cast "encrypted" pada model.
         $report->load(['category', 'unit.campus', 'statuses', 'pelapor']);
 
         return view('petugas.show', compact('report'));
+    }
+
+    /**
+     * Keputusan verifikasi: terima (Dalam Penanganan), minta informasi (Perlu Informasi), atau tolak (Ditolak).
+     */
+    public function verify(Request $request, Report $report): RedirectResponse
+    {
+        $this->ensureVisible($request, $report);
+
+        $data = $request->validate([
+            'keputusan' => ['required', Rule::in(['terima', 'minta_info', 'tolak'])],
+            'catatan' => ['nullable', 'string', 'max:1000', Rule::requiredIf(in_array($request->keputusan, ['minta_info', 'tolak'], true))],
+        ], [
+            'catatan.required' => 'Alasan atau informasi yang dibutuhkan wajib diisi.',
+        ]);
+
+        $status = [
+            'terima' => Report::STATUS_DALAM_PENANGANAN,
+            'minta_info' => Report::STATUS_PERLU_INFORMASI,
+            'tolak' => Report::STATUS_DITOLAK,
+        ][$data['keputusan']];
+
+        $this->applyStatus($request, $report, $status, $data['catatan'] ?? null);
+
+        return redirect()->route('petugas.laporan.show', $report)->with('success', 'Keputusan verifikasi disimpan. Status laporan: '.$report->statusLabel().'.');
+    }
+
+    /**
+     * Perubahan status lanjutan, misalnya Dalam Penanganan ke Selesai.
+     */
+    public function updateStatus(Request $request, Report $report): RedirectResponse
+    {
+        $this->ensureVisible($request, $report);
+
+        $data = $request->validate([
+            'status' => ['required', Rule::in(array_keys(Report::STATUSES))],
+            'catatan' => ['nullable', 'string', 'max:1000', Rule::requiredIf($request->status === Report::STATUS_SELESAI)],
+        ], [
+            'catatan.required' => 'Ringkasan tindak lanjut wajib diisi saat menutup kasus.',
+        ]);
+
+        $this->applyStatus($request, $report, $data['status'], $data['catatan'] ?? null);
+
+        return redirect()->route('petugas.laporan.show', $report)->with('success', 'Status laporan diperbarui menjadi '.$report->statusLabel().'.');
+    }
+
+    /**
+     * Menolak transisi yang tidak sah, lalu menyimpan status baru.
+     */
+    private function applyStatus(Request $request, Report $report, string $status, ?string $catatan): void
+    {
+        if (! $report->canTransitionTo($status)) {
+            throw ValidationException::withMessages([
+                'status' => 'Perubahan dari '.$report->statusLabel().' ke '.(Report::STATUSES[$status]['label'] ?? $status).' tidak diizinkan.',
+            ]);
+        }
+
+        $report->update(['status' => $status]);
     }
 
     /**
