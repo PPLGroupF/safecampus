@@ -30,6 +30,20 @@ class Report extends Model
         self::STATUS_DIBATALKAN => ['label' => 'Dibatalkan', 'color' => 'slate'],
     ];
 
+    /**
+     * Transisi status yang diizinkan untuk petugas (Tabel 6).
+     * Ditolak, Selesai, dan Dibatalkan adalah status akhir.
+     */
+    public const TRANSITIONS = [
+        self::STATUS_DIAJUKAN => [self::STATUS_DALAM_VERIFIKASI],
+        self::STATUS_DALAM_VERIFIKASI => [self::STATUS_PERLU_INFORMASI, self::STATUS_DITOLAK, self::STATUS_DALAM_PENANGANAN],
+        self::STATUS_PERLU_INFORMASI => [self::STATUS_DALAM_VERIFIKASI],
+        self::STATUS_DALAM_PENANGANAN => [self::STATUS_SELESAI],
+        self::STATUS_DITOLAK => [],
+        self::STATUS_SELESAI => [],
+        self::STATUS_DIBATALKAN => [],
+    ];
+
     public const MODE_TERIDENTIFIKASI = 'teridentifikasi';
     public const MODE_ANONIM = 'anonim';
 
@@ -125,8 +139,49 @@ class Report extends Model
         return $this->status === self::STATUS_DIAJUKAN;
     }
 
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, self::TRANSITIONS[$this->status] ?? [], true);
+    }
+
     public function isAnonymous(): bool
     {
         return $this->mode_identitas === self::MODE_ANONIM;
+    }
+
+    /**
+     * Identitas pelapor sesuai siapa yang melihat (penyamaran identitas).
+     *
+     * - Pelapor sendiri selalu melihat identitasnya.
+     * - Petugas melihat identitas hanya jika mode Teridentifikasi.
+     * - Admin dan pihak lain tidak pernah melihat identitas pelapor.
+     *
+     * @return array{anonim: bool, nama: string, nim: ?string, email: ?string, unit: ?string}
+     */
+    public function pelaporUntuk(?User $viewer): array
+    {
+        $isOwner = $viewer && $viewer->id === $this->user_id;
+        $canSeeIdentity = $isOwner || ($viewer?->isPetugas() && ! $this->isAnonymous());
+
+        if (! $canSeeIdentity) {
+            return [
+                'anonim' => true,
+                'nama' => $this->isAnonymous() ? 'Pelapor Anonim' : 'Pelapor',
+                'nim' => null,
+                'email' => null,
+                // Unit tetap ditampilkan karena tidak menunjuk ke individu tertentu.
+                'unit' => $this->unit?->nama_unit,
+            ];
+        }
+
+        $pelapor = $this->pelapor;
+
+        return [
+            'anonim' => false,
+            'nama' => $pelapor->nama,
+            'nim' => $pelapor->nim,
+            'email' => $pelapor->email,
+            'unit' => $this->unit?->nama_unit,
+        ];
     }
 }
