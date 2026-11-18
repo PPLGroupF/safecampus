@@ -173,6 +173,7 @@ class Report extends Model
      * - Pelapor sendiri selalu melihat identitasnya.
      * - Petugas melihat identitas hanya jika mode Teridentifikasi.
      * - Admin dan pihak lain tidak pernah melihat identitas pelapor.
+     * - Jika identitas disembunyikan, unit asal pelapor juga disembunyikan.
      *
      * @return array{anonim: bool, nama: string, nim: ?string, email: ?string, unit: ?string}
      */
@@ -187,8 +188,10 @@ class Report extends Model
                 'nama' => $this->isAnonymous() ? 'Pelapor Anonim' : 'Pelapor',
                 'nim' => null,
                 'email' => null,
-                // Unit tetap ditampilkan karena tidak menunjuk ke individu tertentu.
-                'unit' => $this->unit?->nama_unit,
+                // Sesuai Tabel 7: pada mode anonim petugas hanya melihat kode tiket, kategori,
+                // kronologi, dan bukti. Unit asal disembunyikan karena di unit kecil bisa
+                // mempersempit siapa pelapornya.
+                'unit' => null,
             ];
         }
 
