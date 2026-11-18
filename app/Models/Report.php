@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Report extends Model
 {
@@ -137,6 +138,23 @@ class Report extends Model
     public function isEditableByReporter(): bool
     {
         return $this->status === self::STATUS_DIAJUKAN;
+    }
+
+    /**
+     * Mengubah status sekaligus mencatat riwayatnya pada report_statuses.
+     * $by kosong berarti perubahan dilakukan oleh sistem.
+     */
+    public function changeStatus(string $status, ?User $by = null, ?string $catatan = null): ReportStatus
+    {
+        return DB::transaction(function () use ($status, $by, $catatan) {
+            $this->update(['status' => $status]);
+
+            return $this->statuses()->create([
+                'diubah_oleh' => $by?->id,
+                'status_baru' => $status,
+                'catatan' => $catatan,
+            ]);
+        });
     }
 
     public function canTransitionTo(string $status): bool

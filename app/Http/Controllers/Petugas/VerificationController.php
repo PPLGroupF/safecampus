@@ -57,7 +57,7 @@ class VerificationController extends Controller
 
         // Laporan baru otomatis masuk ke tahap Dalam Verifikasi saat pertama kali dibuka petugas (diubah oleh sistem).
         if ($report->status === Report::STATUS_DIAJUKAN) {
-            $report->update(['status' => Report::STATUS_DALAM_VERIFIKASI]);
+            $report->changeStatus(Report::STATUS_DALAM_VERIFIKASI, null, 'Laporan diterima sistem dan mulai diperiksa petugas Satgas.');
         }
 
         // Kronologi dan keterangan terlapor didekripsi otomatis oleh cast "encrypted" pada model.
@@ -121,7 +121,7 @@ class VerificationController extends Controller
             ]);
         }
 
-        $report->update(['status' => $status]);
+        $report->changeStatus($status, $request->user(), $catatan);
     }
 
     /**

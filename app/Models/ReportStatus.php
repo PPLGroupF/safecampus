@@ -23,6 +23,8 @@ class ReportStatus extends Model
     {
         return [
             'created_at' => 'datetime',
+            // Catatan status (misalnya alasan penolakan) disimpan terenkripsi.
+            'catatan' => 'encrypted',
         ];
     }
 
