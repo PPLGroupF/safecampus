@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Report;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -58,6 +59,7 @@ class VerificationController extends Controller
         // Laporan baru otomatis masuk ke tahap Dalam Verifikasi saat pertama kali dibuka petugas (diubah oleh sistem).
         if ($report->status === Report::STATUS_DIAJUKAN) {
             $report->changeStatus(Report::STATUS_DALAM_VERIFIKASI, null, 'Laporan diterima sistem dan mulai diperiksa petugas Satgas.');
+            AuditLogger::record('Membuka laporan baru (Dalam Verifikasi)', 'verifikasi', $report->kode_tiket);
         }
 
         // Kronologi dan keterangan terlapor didekripsi otomatis oleh cast "encrypted" pada model.
@@ -121,7 +123,11 @@ class VerificationController extends Controller
             ]);
         }
 
+        $from = $report->statusLabel();
         $report->changeStatus($status, $request->user(), $catatan);
+
+        // Hanya perubahan status yang dicatat, bukan isi catatannya.
+        AuditLogger::record('Mengubah status '.$from.' ke '.$report->statusLabel(), 'verifikasi', $report->kode_tiket);
     }
 
     /**
