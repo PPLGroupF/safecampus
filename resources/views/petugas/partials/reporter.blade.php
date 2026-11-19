@@ -22,10 +22,12 @@
                 <dd class="font-medium text-gray-900 break-all">{{ $pelapor['email'] }}</dd>
             </div>
         @endunless
-        <div>
-            <dt class="text-gray-500">Unit asal</dt>
-            <dd class="font-medium text-gray-900">{{ $pelapor['unit'] ?? '-' }}</dd>
-        </div>
+        @unless ($pelapor['anonim'])
+            <div>
+                <dt class="text-gray-500">Unit asal</dt>
+                <dd class="font-medium text-gray-900">{{ $pelapor['unit'] ?? '-' }}</dd>
+            </div>
+        @endunless
     </dl>
 
     @if ($pelapor['anonim'])

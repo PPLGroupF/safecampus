@@ -43,6 +43,19 @@ class QueueTest extends TestCase
             ->assertDontSee($pelapor->nama)->assertDontSee($pelapor->email)->assertSee($anonim->kronologi);
     }
 
+    public function test_anonymous_report_hides_reporter_unit(): void
+    {
+        $petugas = User::factory()->petugas()->create();
+        $unit = \App\Models\Unit::factory()->create(['nama_unit' => 'Unit Kecil Rahasia']);
+        $pelapor = User::factory()->create(['unit_id' => $unit->id]);
+        $anonim = Report::factory()->anonim()->create(['user_id' => $pelapor->id, 'unit_id' => $unit->id]);
+        $terbuka = Report::factory()->create(['user_id' => $pelapor->id, 'unit_id' => $unit->id]);
+
+        $this->assertNull($anonim->pelaporUntuk($petugas)['unit']);
+        $this->actingAs($petugas)->get(route('petugas.laporan.show', $anonim))->assertOk()->assertDontSee('Unit Kecil Rahasia');
+        $this->actingAs($petugas)->get(route('petugas.laporan.show', $terbuka))->assertOk()->assertSee('Unit Kecil Rahasia');
+    }
+
     public function test_only_officers_can_access(): void
     {
         $report = Report::factory()->create();
