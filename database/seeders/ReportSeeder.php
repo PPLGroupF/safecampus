@@ -26,9 +26,21 @@ class ReportSeeder extends Seeder
             [$pelapor, 'Perundungan', 'teridentifikasi', 'mahasiswa', 'Data dummy: Sejak awal semester saya sering diejek dan dikucilkan oleh beberapa teman satu angkatan di grup kelas dan saat praktikum di laboratorium.'],
             [$pelapor, 'Kekerasan Berbasis Gender Online', 'anonim', 'tidak_diketahui', 'Data dummy: Saya menerima pesan bernada melecehkan dari akun tanpa nama di media sosial setelah mengunggah foto kegiatan himpunan.'],
             [$aisyah, 'Kekerasan Psikis', 'anonim', 'dosen', 'Data dummy: Saat bimbingan, saya beberapa kali dibentak dan direndahkan di depan mahasiswa lain sehingga saya takut datang ke kampus.'],
+            [$pelapor, 'Diskriminasi dan Intoleransi', 'teridentifikasi', 'tenaga_kependidikan', 'Data dummy: Saya diperlakukan berbeda saat mengurus administrasi karena latar belakang saya dan permohonan saya sengaja diperlambat.'],
+            [$aisyah, 'Kekerasan Seksual', 'anonim', 'mahasiswa', 'Data dummy: Seorang kakak tingkat mengirim komentar bernada seksual berulang kali melalui pesan pribadi setelah kegiatan organisasi.'],
         ];
 
-        foreach ($samples as [$user, $kategori, $mode, $peran, $kronologi]) {
+        // Alur status contoh agar dashboard dan timeline langsung terisi saat demo.
+        $alur = [
+            [],
+            [],
+            [],
+            [[Report::STATUS_DALAM_VERIFIKASI, null, 'Laporan diterima sistem dan mulai diperiksa petugas Satgas.'], [Report::STATUS_DALAM_PENANGANAN, 'petugas', 'Laporan valid dan akan ditindaklanjuti.']],
+            [[Report::STATUS_DALAM_VERIFIKASI, null, 'Laporan diterima sistem dan mulai diperiksa petugas Satgas.'], [Report::STATUS_DALAM_PENANGANAN, 'petugas', 'Laporan valid dan akan ditindaklanjuti.'], [Report::STATUS_SELESAI, 'petugas', 'Data dummy: pendampingan psikologis telah dilakukan dan kasus diteruskan ke pimpinan fakultas.']],
+        ];
+        $petugas = User::firstWhere('email', 'petugas@safecampus.test');
+
+        foreach ($samples as $index => [$user, $kategori, $mode, $peran, $kronologi]) {
             if (! $user) {
                 continue;
             }
@@ -49,6 +61,10 @@ class ReportSeeder extends Seeder
                 'status_baru' => Report::STATUS_DIAJUKAN,
                 'catatan' => 'Laporan berhasil dibuat dan menunggu verifikasi petugas.',
             ]);
+
+            foreach ($alur[$index] ?? [] as [$status, $oleh, $catatan]) {
+                $report->changeStatus($status, $oleh ? $petugas : null, $catatan);
+            }
         }
     }
 }
