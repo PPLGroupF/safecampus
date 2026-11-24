@@ -58,6 +58,15 @@ class User extends Authenticatable
         return $this->hasMany(Report::class);
     }
 
+    /**
+     * Notifikasi dalam aplikasi milik pengguna ini (terbaru di atas).
+     * Sengaja tidak bernama notifications() karena nama itu dipakai trait Notifiable bawaan Laravel.
+     */
+    public function notifikasi(): HasMany
+    {
+        return $this->hasMany(Notification::class)->latest()->latest('id');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
