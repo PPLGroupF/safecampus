@@ -112,6 +112,45 @@ class Report extends Model
         return $this->hasMany(ReportStatus::class)->orderBy('created_at')->orderBy('id');
     }
 
+    /** Riwayat penugasan, terbaru di atas. */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(ReportAssignment::class)->latest()->latest('id');
+    }
+
+    /**
+     * Menugaskan laporan ke petugas. Penugasan lama dinonaktifkan dan tetap tersimpan sebagai riwayat.
+     */
+    public function assignTo(User $petugas, ?User $by = null, ?string $alasan = null): ReportAssignment
+    {
+        return DB::transaction(function () use ($petugas, $by, $alasan) {
+            $this->assignments()->where('aktif', true)->update(['aktif' => false]);
+            $this->update(['petugas_id' => $petugas->id]);
+
+            return $this->assignments()->create([
+                'petugas_id' => $petugas->id,
+                'ditugaskan_oleh' => $by?->id,
+                'alasan' => $alasan,
+                'aktif' => true,
+            ]);
+        });
+    }
+
+    /**
+     * Mencabut penugasan aktif. Laporan kembali ke antrean bersama (tanpa penanggung jawab).
+     */
+    public function revokeAssignment(?User $by = null): void
+    {
+        DB::transaction(function () use ($by) {
+            $this->assignments()->where('aktif', true)->update([
+                'aktif' => false,
+                'dicabut_at' => now(),
+                'dicabut_oleh' => $by?->id,
+            ]);
+            $this->update(['petugas_id' => null]);
+        });
+    }
+
     public function statusLabel(): string
     {
         return self::STATUSES[$this->status]['label'] ?? $this->status;
