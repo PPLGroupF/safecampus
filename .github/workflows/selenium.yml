@@ -1,0 +1,72 @@
+name: Selenium
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite, fileinfo, zip
+          # Batas unggah PHP dinaikkan supaya validasi 5 MB milik aplikasi yang bekerja.
+          ini-values: upload_max_filesize=10M, post_max_size=12M
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare application (SQLite + data contoh)
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=$GITHUB_WORKSPACE/database/selenium.sqlite|" .env
+          touch database/selenium.sqlite
+          php artisan key:generate
+          php artisan migrate:fresh --seed --force
+
+      - name: Start server
+        run: |
+          php artisan serve --no-reload --port=8000 > storage/logs/serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/login > /dev/null && break; sleep 1; done
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Selenium
+        run: pip install -r tests/selenium/requirements.txt
+
+      - name: Run Selenium tests
+        env:
+          SC_BASE_URL: http://127.0.0.1:8000
+          SC_HEADLESS: '1'
+        run: pytest tests/selenium
+
+      - name: Upload screenshots and log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-screenshots
+          path: |
+            tests/selenium/screenshots
+            storage/logs

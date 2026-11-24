@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Tes Selenium SafeCampus</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <style>body{font-family:Segoe UI,Arial,sans-serif;max-width:980px;margin:24px auto;padding:0 16px;line-height:1.55;color:#1f2937;background:#fff}
+  h1{border-bottom:2px solid #e5e7eb;padding-bottom:6px}h2{margin-top:28px;border-bottom:1px solid #eee;padding-bottom:4px}
+  code{background:#f3f4f6;padding:1px 5px;border-radius:4px;font-size:90%}pre{background:#0f172a;color:#e2e8f0;padding:12px 14px;border-radius:8px;overflow-x:auto}
+  pre code{background:none;color:inherit;padding:0}table{border-collapse:collapse;margin:10px 0;width:100%}th,td{border:1px solid #d1d5db;padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:#f9fafb}blockquote{border-left:4px solid #f59e0b;background:#fffbeb;margin:12px 0;padding:8px 14px}</style>
+</head>
+<body>
+<h1 id="tes-selenium-safecampus">Tes Selenium SafeCampus</h1>
+<p>Tes end-to-end yang menjalankan Chrome sungguhan untuk menguji fitur
+seperti pengguna.</p>
+<h2 id="menjalankan-di-laptop">Menjalankan di laptop</h2>
+<ol type="1">
+<li>Sekali saja:
+<code>pip install -r tests/selenium/requirements.txt</code></li>
+<li>Terminal 1: <code>php artisan migrate:fresh --seed</code> lalu
+<code>php artisan serve</code></li>
+<li>Terminal 2 (folder proyek): <code>pytest tests/selenium</code></li>
+</ol>
+<p>Menjalankan satu file saja:
+<code>pytest tests/selenium/test_smoke.py</code></p>
+<p>Browser tampil saat tes berjalan. Agar tidak tampil: set
+<code>SC_HEADLESS=1</code> (PowerShell:
+<code>$env:SC_HEADLESS="1"</code>, Mac:
+<code>export SC_HEADLESS=1</code>).</p>
+<h2 id="struktur">Struktur</h2>
+<ul>
+<li><code>conftest.py</code>: membuka dan menutup Chrome untuk setiap
+tes, screenshot otomatis saat gagal.</li>
+<li><code>helpers.py</code>: fungsi bantu (login, isi form, buat
+laporan, buka laporan sebagai petugas).</li>
+<li><code>test_*.py</code>: satu file untuk setiap PBI.</li>
+</ul>
+<p>Di GitHub Actions, tes ini dijalankan otomatis oleh workflow
+<strong>Selenium</strong>
+(<code>.github/workflows/selenium.yml</code>).</p>
+</body>
+</html>
