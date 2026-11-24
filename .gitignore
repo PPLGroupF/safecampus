@@ -25,3 +25,8 @@ database/database.sqlite
 /tests/Browser/console/*
 /tests/Browser/source/*
 !/tests/Browser/**/.gitignore
+/tests/selenium/screenshots/
+/tests/selenium/downloads/
+/tests/selenium/.pytest_cache/
+__pycache__/
+/.venv
