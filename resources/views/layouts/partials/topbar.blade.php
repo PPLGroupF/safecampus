@@ -13,14 +13,38 @@
     <div class="flex-1"></div>
 
     @if ($hasNotifications)
-        <a href="{{ route('notifikasi.index') }}" class="relative rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" dusk="notification-bell" aria-label="Notifikasi">
-            <x-icon name="bell" class="h-6 w-6" />
-            @if ($unread > 0)
-                <span class="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white" dusk="notification-count">
-                    {{ $unread > 99 ? '99+' : $unread }}
-                </span>
-            @endif
-        </a>
+        @php($latest = $user->notifikasi()->take(5)->get())
+        <div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false">
+            <button type="button" @click="open = ! open" class="relative rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" dusk="notification-bell" aria-label="Notifikasi">
+                <x-icon name="bell" class="h-6 w-6" />
+                @if ($unread > 0)
+                    <span class="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white" dusk="notification-count">
+                        {{ $unread > 99 ? '99+' : $unread }}
+                    </span>
+                @endif
+            </button>
+
+            <div x-show="open" x-cloak x-transition @click.outside="open = false"
+                 class="absolute right-0 z-30 mt-2 w-80 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg" dusk="notification-dropdown">
+                <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                    <span class="text-sm font-semibold text-gray-900">Notifikasi</span>
+                    <span class="text-xs text-gray-500">{{ $unread }} belum dibaca</span>
+                </div>
+                @forelse ($latest as $item)
+                    <form method="POST" action="{{ route('notifikasi.read', $item) }}">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" @class(['block w-full px-4 py-3 text-left hover:bg-gray-50', 'bg-brand-50/40' => ! $item->isRead()]) dusk="dropdown-notification-{{ $item->id }}">
+                            <span class="block text-sm font-medium text-gray-900">{{ $item->judul }}</span>
+                            <span class="block truncate text-xs text-gray-500">{{ $item->pesan }}</span>
+                        </button>
+                    </form>
+                @empty
+                    <p class="px-4 py-6 text-center text-sm text-gray-500">Belum ada notifikasi.</p>
+                @endforelse
+                <a href="{{ route('notifikasi.index') }}" class="block border-t border-gray-100 px-4 py-2.5 text-center text-sm font-semibold text-brand-700 hover:bg-gray-50" dusk="notification-see-all">Lihat semua notifikasi</a>
+            </div>
+        </div>
     @endif
 
     <div class="flex items-center gap-3 border-l border-gray-100 pl-3">
