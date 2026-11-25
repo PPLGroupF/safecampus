@@ -67,6 +67,12 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class)->latest()->latest('id');
     }
 
+    /** Jumlah notifikasi yang belum dibaca, ditampilkan pada ikon lonceng di topbar. */
+    public function unreadNotificationCount(): int
+    {
+        return $this->notifikasi()->unread()->count();
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
