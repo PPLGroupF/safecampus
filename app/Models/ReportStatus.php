@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\NotifikasiLaporan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,6 +19,14 @@ class ReportStatus extends Model
         'status_baru',
         'catatan',
     ];
+
+    /**
+     * Setiap perubahan status oleh petugas otomatis mengirim notifikasi ke pelapor.
+     */
+    protected static function booted(): void
+    {
+        static::created(fn (ReportStatus $status) => NotifikasiLaporan::statusBerubah($status));
+    }
 
     protected function casts(): array
     {
