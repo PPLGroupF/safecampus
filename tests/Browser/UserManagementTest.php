@@ -24,6 +24,7 @@ class UserManagementTest extends DuskTestCase
             $browser->loginAs($admin)
                 ->visitRoute('admin.users.index')
                 ->clickAndWaitForReload('@add-user')
+                ->waitForAlpine()
                 ->type('@nama', 'Budi Mahasiswa')
                 ->type('@email', 'budi@safecampus.test')
                 ->select('@role', 'mahasiswa')
@@ -45,6 +46,7 @@ class UserManagementTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($admin, $unit) {
             $browser->loginAs($admin)
                 ->visitRoute('admin.users.create')
+                ->waitForAlpine()
                 ->type('@nama', 'Tanpa NIM')
                 ->type('@email', 'tanpanim@safecampus.test')
                 ->select('@role', 'mahasiswa')
@@ -63,6 +65,7 @@ class UserManagementTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($admin, $petugas) {
             $browser->loginAs($admin)
                 ->visitRoute('admin.users.edit', $petugas)
+                ->waitForAlpine()
                 ->clear('@nama')
                 ->type('@nama', 'Nama Baru')
                 ->clickAndWaitForReload('@save-user')

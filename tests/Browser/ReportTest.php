@@ -24,7 +24,8 @@ class ReportTest extends DuskTestCase
 
     private function fillForm(Browser $browser, Category $category, string $mode): Browser
     {
-        return $browser->select('@category_id', (string) $category->id)
+        return $browser->waitForAlpine()
+            ->select('@category_id', (string) $category->id)
             ->type('@kronologi', 'Data dummy: pada hari Senin pukul 10.00 di ruang kelas saya mengalami ejekan berulang.')
             ->click('@next-step')
             ->click('@next-step')
@@ -76,6 +77,7 @@ class ReportTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($student, $category) {
             $browser->loginAs($student)
                 ->visitRoute('laporan.create')
+                ->waitForAlpine()
                 ->select('@category_id', (string) $category->id)
                 ->script("document.getElementById('kronologi').removeAttribute('minlength');");
             $browser->type('@kronologi', 'Terlalu pendek')
@@ -111,6 +113,7 @@ class ReportTest extends DuskTestCase
             $browser->loginAs($student)
                 ->visitRoute('laporan.show', $report)
                 ->clickAndWaitForReload('@edit-report')
+                ->waitForAlpine()
                 ->clear('@kronologi')
                 ->type('@kronologi', 'Data dummy: kronologi yang sudah diperbaiki oleh pelapor dengan lebih lengkap.')
                 ->click('@step-4')

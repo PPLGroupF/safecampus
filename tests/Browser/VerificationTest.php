@@ -44,11 +44,11 @@ class VerificationTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($petugas, $report) {
             $browser->loginAs($petugas)
                 ->visitRoute('petugas.laporan.show', $report)
-                ->click('@choose-terima')
+                ->clickAndWaitFor('@choose-terima', '@submit-verification')
                 ->clickAndWaitForReload('@submit-verification')
                 ->assertSee('Keputusan verifikasi disimpan.')
                 ->assertSeeIn('@current-status', 'Dalam Penanganan')
-                ->click('@choose-update-status')
+                ->clickAndWaitFor('@choose-update-status', '@submit-status')
                 ->type('@status-note', 'Pendampingan selesai dan kasus ditindaklanjuti pimpinan.')
                 ->clickAndWaitForReload('@submit-status')
                 ->assertSeeIn('@current-status', 'Selesai')
@@ -64,10 +64,10 @@ class VerificationTest extends DuskTestCase
         $this->browse(function (Browser $petugasBrowser, Browser $pelaporBrowser) use ($petugas, $report) {
             $petugasBrowser->loginAs($petugas)
                 ->visitRoute('petugas.laporan.show', $report)
-                ->click('@choose-tolak')
+                ->clickAndWaitFor('@choose-tolak', '@submit-verification')
                 ->clickAndWaitForReload('@submit-verification')
                 ->assertPresent('@error-catatan')
-                ->click('@choose-tolak')
+                ->clickAndWaitFor('@choose-tolak', '@verification-note')
                 ->type('@verification-note', 'Kejadian di luar lingkungan dan kewenangan kampus.')
                 ->clickAndWaitForReload('@submit-verification')
                 ->assertSeeIn('@current-status', 'Ditolak');
@@ -87,11 +87,11 @@ class VerificationTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($petugas, $report) {
             $browser->loginAs($petugas)
                 ->visitRoute('petugas.laporan.show', $report)
-                ->click('@choose-minta-info')
+                ->clickAndWaitFor('@choose-minta-info', '@verification-note')
                 ->type('@verification-note', 'Mohon jelaskan waktu kejadian.')
                 ->clickAndWaitForReload('@submit-verification')
                 ->assertSeeIn('@current-status', 'Perlu Informasi')
-                ->click('@choose-update-status')
+                ->clickAndWaitFor('@choose-update-status', '@submit-status')
                 ->clickAndWaitForReload('@submit-status')
                 ->assertSeeIn('@current-status', 'Dalam Verifikasi');
         });
