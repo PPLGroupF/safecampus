@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Report;
 use App\Models\Schedule;
 use App\Services\AuditLogger;
+use App\Support\NotifikasiLaporan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -33,6 +34,7 @@ class ScheduleController extends Controller
         ]);
 
         AuditLogger::record('Membuat jadwal '.$schedule->jenisLabel(), 'pendampingan', $report->kode_tiket);
+        NotifikasiLaporan::jadwal($report, 'dibuat');
 
         return redirect()->to(route('petugas.laporan.show', $report).'#jadwal')->with('success', 'Jadwal pendampingan dibuat. Pelapor dapat mengonfirmasi kehadirannya.');
     }
@@ -64,6 +66,7 @@ class ScheduleController extends Controller
 
         $schedule->save();
         AuditLogger::record('Mengubah jadwal '.$schedule->jenisLabel(), 'pendampingan', $schedule->report->kode_tiket);
+        NotifikasiLaporan::jadwal($schedule->report, 'diubah');
 
         return redirect()->route('petugas.jadwal.show', $schedule)->with('success', 'Jadwal pendampingan diperbarui.');
     }
@@ -78,6 +81,7 @@ class ScheduleController extends Controller
         if (! $schedule->isCancelled()) {
             $schedule->update(['status' => Schedule::STATUS_DIBATALKAN]);
             AuditLogger::record('Membatalkan jadwal '.$schedule->jenisLabel(), 'pendampingan', $schedule->report->kode_tiket);
+            NotifikasiLaporan::jadwal($schedule->report, 'dibatalkan');
         }
 
         return redirect()->to(route('petugas.laporan.show', $schedule->report).'#jadwal')->with('success', 'Jadwal pendampingan dibatalkan.');
@@ -97,6 +101,7 @@ class ScheduleController extends Controller
 
         $schedule->update(['status' => Schedule::STATUS_DIKONFIRMASI, 'dikonfirmasi_at' => now()]);
         AuditLogger::record('Mengonfirmasi jadwal pendampingan', 'pendampingan', $report->kode_tiket, anonymous: true);
+        NotifikasiLaporan::jadwal($report, 'dikonfirmasi', $schedule->petugas);
 
         return redirect()->route('laporan.show', $report)->with('success', 'Terima kasih, kehadiran Anda pada jadwal pendampingan sudah dikonfirmasi.');
     }
