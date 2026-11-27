@@ -36,6 +36,15 @@ return [
             'throw' => false,
         ],
 
+        // Bukti laporan: penyimpanan privat, tidak bisa diakses langsung lewat URL.
+        // File hanya dapat diunduh melalui route bukti.download yang memeriksa hak akses.
+        'bukti' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/bukti'),
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
