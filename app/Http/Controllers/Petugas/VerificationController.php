@@ -139,10 +139,11 @@ class VerificationController extends Controller
     }
 
     /**
-     * Laporan yang boleh dilihat petugas. Laporan yang dibatalkan pelapor tidak ditangani.
+     * Laporan yang boleh dilihat petugas: belum ditugaskan, atau ditugaskan ke petugas ini.
+     * Aturannya ada di Report::scopeVisibleToPetugas supaya fitur lain memakai aturan yang sama.
      */
     private function visibleReports(Request $request)
     {
-        return Report::query()->where('status', '!=', Report::STATUS_DIBATALKAN);
+        return Report::query()->visibleToPetugas($request->user());
     }
 }
