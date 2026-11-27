@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -149,6 +150,24 @@ class Report extends Model
             ]);
             $this->update(['petugas_id' => null]);
         });
+    }
+
+    /**
+     * Laporan yang boleh dibuka seorang petugas:
+     * - laporan yang belum ditugaskan ke siapa pun (masih di antrean bersama), atau
+     * - laporan yang penugasan aktifnya adalah petugas tersebut.
+     * Laporan yang dibatalkan pelapor tidak ditangani.
+     */
+    public function scopeVisibleToPetugas(Builder $query, User $petugas): Builder
+    {
+        return $query->where('status', '!=', self::STATUS_DIBATALKAN)
+            ->where(fn (Builder $inner) => $inner->whereNull('petugas_id')->orWhere('petugas_id', $petugas->id));
+    }
+
+    public function isVisibleToPetugas(User $petugas): bool
+    {
+        return $petugas->isPetugas()
+            && static::query()->visibleToPetugas($petugas)->whereKey($this->id)->exists();
     }
 
     public function statusLabel(): string
