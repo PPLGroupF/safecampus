@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Facebook\WebDriver\Chrome\ChromeOptions;
+use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Illuminate\Support\Collection;
@@ -20,6 +21,30 @@ abstract class DuskTestCase extends BaseTestCase
     {
         // Server lokal (php artisan serve) di Windows cukup lambat, jadi waktu tunggu diperpanjang.
         Browser::$waitSeconds = 15;
+
+        // Tombol yang memakai Alpine.js (misalnya pilihan Terima/Tolak dan langkah formulir laporan)
+        // baru berfungsi setelah Alpine selesai dimuat. Tanpa menunggu ini, klik yang terlalu cepat
+        // setelah halaman dimuat bisa hilang dan tes gagal secara acak (flaky).
+        Browser::macro('waitForAlpine', function () {
+            /** @var Browser $this */
+            $this->waitUntil("window.Alpine !== undefined && document.readyState === 'complete'");
+
+            return $this;
+        });
+
+        // Klik tombol Alpine lalu tunggu elemen yang dimunculkannya. Jika belum muncul, klik sekali lagi.
+        Browser::macro('clickAndWaitFor', function (string $selector, string $appears) {
+            /** @var Browser $this */
+            $this->waitForAlpine()->click($selector);
+
+            try {
+                $this->waitFor($appears, 3);
+            } catch (TimeoutException $e) {
+                $this->click($selector)->waitFor($appears);
+            }
+
+            return $this;
+        });
 
         // Jika ChromeDriver sudah berjalan (misalnya dijalankan manual di terminal lain),
         // pakai yang sudah ada. Jika belum, Dusk menjalankannya sendiri di port 9515.
