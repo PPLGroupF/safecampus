@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Report;
+use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -110,6 +111,102 @@ class VerificationController extends Controller
         $this->applyStatus($request, $report, $data['status'], $data['catatan'] ?? null);
 
         return redirect()->route('petugas.laporan.show', $report)->with('success', 'Status laporan diperbarui menjadi '.$report->statusLabel().'.');
+    }
+
+    /**
+     * Menugaskan laporan yang belum punya penanggung jawab ke seorang petugas.
+     */
+    public function assign(Request $request, Report $report): RedirectResponse
+    {
+        $this->ensureVisible($request, $report);
+        $this->ensureAssignable($report);
+
+        if ($report->petugas_id) {
+            return back()->with('error', 'Laporan sudah memiliki petugas penanggung jawab. Gunakan Alihkan Penugasan.');
+        }
+
+        $petugas = $this->validatedOfficer($request);
+        $report->assignTo($petugas, $request->user());
+
+        return $this->redirectAfterAssignment($request, $report, 'Laporan ditugaskan ke '.$petugas->nama.'.');
+    }
+
+    /**
+     * Mengalihkan penugasan ke petugas lain. Alasan wajib diisi dan tersimpan di riwayat penugasan.
+     */
+    public function reassign(Request $request, Report $report): RedirectResponse
+    {
+        $this->ensureVisible($request, $report);
+        $this->ensureAssignable($report);
+
+        if (! $report->petugas_id) {
+            return back()->with('error', 'Laporan belum ditugaskan. Gunakan Tugaskan.');
+        }
+
+        $petugas = $this->validatedOfficer($request, requireReason: true);
+
+        if ($petugas->id === $report->petugas_id) {
+            throw ValidationException::withMessages(['petugas_id' => 'Pilih petugas yang berbeda dari penanggung jawab saat ini.']);
+        }
+
+        $report->assignTo($petugas, $request->user(), $request->input('alasan'));
+
+        return $this->redirectAfterAssignment($request, $report, 'Penugasan dialihkan ke '.$petugas->nama.'.');
+    }
+
+    /**
+     * Jika laporan ditugaskan ke petugas lain, petugas ini tidak lagi berhak membukanya,
+     * jadi kembali ke antrean. Jika ditugaskan ke diri sendiri, tetap di halaman detail.
+     */
+    private function redirectAfterAssignment(Request $request, Report $report, string $message): RedirectResponse
+    {
+        $target = $report->petugas_id === $request->user()->id
+            ? route('petugas.laporan.show', $report)
+            : route('petugas.antrean');
+
+        return redirect()->to($target)->with('success', $message);
+    }
+
+    /**
+     * Mencabut penugasan: laporan kembali ke antrean bersama sehingga semua petugas dapat melihatnya lagi.
+     * Dipakai misalnya saat petugas penanggung jawab memiliki konflik kepentingan.
+     */
+    public function unassign(Request $request, Report $report): RedirectResponse
+    {
+        $this->ensureVisible($request, $report);
+        $this->ensureAssignable($report);
+
+        if (! $report->petugas_id) {
+            return back()->with('error', 'Laporan belum ditugaskan ke petugas mana pun.');
+        }
+
+        $report->revokeAssignment($request->user());
+
+        return redirect()->route('petugas.laporan.show', $report)->with('success', 'Penugasan dicabut. Laporan kembali ke antrean bersama.');
+    }
+
+    private function validatedOfficer(Request $request, bool $requireReason = false): User
+    {
+        $data = $request->validate([
+            'petugas_id' => ['required', Rule::exists('users', 'id')->where('role', User::ROLE_PETUGAS)->where('is_active', true)],
+            'alasan' => [$requireReason ? 'required' : 'nullable', 'string', 'max:255'],
+        ], [
+            'petugas_id.required' => 'Pilih petugas yang akan ditugaskan.',
+            'petugas_id.exists' => 'Petugas yang dipilih tidak valid atau tidak aktif.',
+            'alasan.required' => 'Alasan pengalihan wajib diisi.',
+        ]);
+
+        return User::findOrFail($data['petugas_id']);
+    }
+
+    /**
+     * Laporan berstatus akhir tidak bisa ditugaskan lagi.
+     */
+    private function ensureAssignable(Report $report): void
+    {
+        if (in_array($report->status, [Report::STATUS_DITOLAK, Report::STATUS_SELESAI, Report::STATUS_DIBATALKAN], true)) {
+            throw ValidationException::withMessages(['petugas_id' => 'Laporan berstatus '.$report->statusLabel().' tidak dapat ditugaskan.']);
+        }
     }
 
     /**
